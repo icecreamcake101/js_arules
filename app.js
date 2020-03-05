@@ -661,7 +661,14 @@ function handleFileSelect(evt) {
             result = new Apriori.Algorithm(0.01,0.01,false).showAnalysisResult(learning_dataset).filter(function(elem) {
                 return elem.lhs[0] != "''" && elem.rhs[0] != "''"
             });
-			document.getElementById("demo").innerHTML = JSON.stringify(result);
+		var rhss = result.map(function(elem){return elem.rhs.join( " && " )});
+		var lhss = result.map(function(elem){return elem.lhs.join( " && " )});
+		var confidences = result.map(function(elem){return elem.confidence});
+		var couples = lhss.map(function(e, i) {
+		  return e + " &#8658 " + rhss[i] + "  -- Confidence: " + confidences[i];
+		});
+		document.getElementById("rules").innerHTML = JSON.stringify(couples, undefined, 2);
+		document.getElementById("results").innerHTML = JSON.stringify(result);
         }
     });
 
