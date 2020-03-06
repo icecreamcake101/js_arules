@@ -633,12 +633,14 @@
 .call(this));
 
 window['data'] = {};
+window['csv_result'] = {}
 
 function handleFileSelect(evt) {
     var file = evt.target.files[0];
     Papa.parse(file, {
         header: true,
         dynamicTyping: true,
+        worker: true,
         complete: function(results) {
             window.data = results;
             sparse_columns = [];
@@ -651,24 +653,33 @@ function handleFileSelect(evt) {
             })
             var learning_dataset = _.map(data.data, function(row) {
                 return _.omit(row, sparse_columns);
-            }).slice(0, 100);
+            }).slice(0, 200);
             JSONC.compress(learning_dataset)
             // console.log(JSON.stringify(learning_dataset))
             header = "\"" + _.values(learning_dataset[0]._).join("\",\"") + "\"\n";
             learning_dataset = header + _.map(learning_dataset, function(obj) {
                 return "\"" + _.values(obj).slice(0, -1).join("\",\"") + "\"\n"
             }).join('');
-            result = new Apriori.Algorithm(0.01,0.01,false).showAnalysisResult(learning_dataset).filter(function(elem) {
+            result = new Apriori.Algorithm(0.01, 0.01, false).showAnalysisResult(learning_dataset).filter(function(elem) {
                 return elem.lhs[0] != "''" && elem.rhs[0] != "''"
             });
-		var rhss = result.map(function(elem){return elem.rhs.join( " && " )});
-		var lhss = result.map(function(elem){return elem.lhs.join( " && " )});
-		var confidences = result.map(function(elem){return elem.confidence});
-		var couples = lhss.map(function(e, i) {
-		  return e + " &#8658 " + rhss[i] + "  -- Confidence: " + confidences[i];
-		});
-		document.getElementById("rules").innerHTML = JSON.stringify(couples, undefined, 2);
-		document.getElementById("results").innerHTML = JSON.stringify(result);
+            window.csv_result = Papa.unparse(result);
+
+            var rhss = result.map(function(elem) {
+                return elem.rhs.join(" && ")
+            });
+            var lhss = result.map(function(elem) {
+                return elem.lhs.join(" && ")
+            });
+            var confidences = result.map(function(elem) {
+                return elem.confidence
+            });
+            var couples = lhss.map(function(e, i) {
+                return e + " &#8658 " + rhss[i] + "  -- Confidence: " + confidences[i];
+            });
+            document.getElementById("rules").innerHTML = JSON.stringify(couples, undefined, 2);
+            document.getElementById("results").innerHTML = JSON.stringify(result);
+
         }
     });
 
@@ -676,4 +687,27 @@ function handleFileSelect(evt) {
 
 $(document).ready(function() {
     $("#csv-file").change(handleFileSelect);
+    // Start file download.
+    document.getElementById("dwn-btn").addEventListener("click", function() {
+        // Generate download of hello.txt file with some content
+        if (!_.isEmpty(window.csv_result)) {
+            var text = window.csv_result;
+            var filename = "rules.csv";
+            download(filename, text);
+        }
+    }, false);
+
 });
+
+function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+}
