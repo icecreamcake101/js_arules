@@ -679,6 +679,8 @@ function handleFileSelect(evt) {
             });
             document.getElementById("rules").innerHTML = JSON.stringify(couples, undefined, 2);
             document.getElementById("results").innerHTML = JSON.stringify(result);
+            createTableView(data)
+            console.log(data)
 
         }
     });
@@ -710,4 +712,65 @@ function download(filename, text) {
     element.click();
 
     document.body.removeChild(element);
+}
+
+
+function createTableView({data, errors, meta}) {
+    // get the table fields
+    let {fields} = meta;
+
+    makeTable(data, fields);
+}
+
+function createTableHeader(fields) {
+    // get fields length and create th element accordingly
+    let columnCount = fields.length;
+
+    // table heading
+    let th = fields.reduce((init, field) => {
+        return init + `<th>${field}</th>`
+    }, '')
+
+    return makeRow(th)
+}
+
+function makeRow(row) {
+    let tr = `<tr>${row}</tr>`;
+    return makeTableChildren(tr);
+}
+
+function makeTableChildren(children, type = "thead") {
+    children = `<${type}> ${children} </${type}> `;
+    return children;
+}
+
+function makeTableBody(children, fields) {
+
+    children = children.reduce((init, child) => {
+
+        let thisRow = fields.reduce((initField, field) => {
+
+            return initField + `<td>${child[field]}</td>`
+        }, '')
+
+
+        return init + makeRow(thisRow)
+    }, '')
+    return makeTableChildren(children, 'tbody');
+}
+
+function makeTable(data, fields) {
+    // Make table heading
+    let thead = createTableHeader(fields);
+
+    // Make table body
+    let tbody = makeTableBody(data, fields)
+
+    let tableView = document.querySelector('.tableview')
+    tableView.innerHTML = `
+        <table>
+            ${thead}
+            ${tbody}
+        </table>
+    `;
 }
