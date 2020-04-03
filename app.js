@@ -719,7 +719,7 @@ function createTableView({data, errors, meta}) {
     // get the table fields
     let {fields} = meta;
 
-    makeTable(data, fields);
+    makeTable(data.slice(0,10), fields);
 }
 
 function createTableHeader(fields) {
