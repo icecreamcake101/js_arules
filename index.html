@@ -2,6 +2,8 @@
 
 <head>
     <title>Local association learning in JS</title>
+    <link rel="stylesheet" href="/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@200&display=swap" rel="stylesheet">
 </head>
 <script src="papaparse.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -9,24 +11,24 @@
 <script src="app.js"></script>
 
 <body>
-    <h1 id="h1">Local Association Learning in your Browser using JS</h1>
-    <p id="p1">Better understand your bank bill, or your shopping list! No upload to a remote server is necessary! Open the networking tab in the developer console to inspect request!</p>
-
-    <script>
-        document.getElementById("p1").style.color = "black";
-        document.getElementById("p1").style.fontFamily = "sans-serif";
-        document.getElementById("p1").style.fontSize = "larger";
-        document.body.style.backgroundColor = "beige";
-        document.getElementById("h1").style.borderStyle = "solid";
-        document.getElementById("h1").style.color = "brown";
-    </script>
-
-    <p id="results"></p>
-    <pre id="rules"></pre>
-    <input type="button" id="dwn-btn" value="Download rules.csv file" /> Upload a CSV file:
-    <input type="file" id="csv-file" name="files" />
-    <div class="tableview">
+    <div class="wrapper">
+        <h1 id="h1">Local Association Learning in your Browser using JS</h1>
+        <p id="p1">Better understand your bank bill, or your shopping list! No upload to a remote server is necessary! Open the
+            networking tab in the developer console to inspect request!</p>
         
+        <div class="input_container">
+            <p id="results"></p>
+            <pre id="rules"></pre>
+
+            <label for="dwn-btn" class="csv-file">Upload a CSV file</label>
+            <input type="button" id="dwn-btn" value="Download rules.csv file" />
+            
+            <br>
+
+
+            <label for="csv-file" class="choose-file">choose file</label>
+            <input type="file" id="csv-file" name="files" />
+        </div>
     </div>
 </body>
 
