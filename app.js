@@ -678,7 +678,7 @@ function handleFileSelect(evt) {
                 return e + " &#8658 " + rhss[i] + "  -- Confidence: " + confidences[i];
             });
             document.getElementById("rules").innerHTML = JSON.stringify(couples, undefined, 2);
-            document.getElementById("results").innerHTML = JSON.stringify(result);
+            // document.getElementById("results").innerHTML = JSON.stringify(result);
             createTableView(data)
             console.log(data)
 
