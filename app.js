@@ -718,6 +718,7 @@ function handleFileSelect(evt) {
 			}, false);
             document.getElementById("results").innerHTML = couples.join("\n");
 			printPapaObject(results);
+
         }
     });
 }
