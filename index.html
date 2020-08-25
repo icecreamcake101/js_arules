@@ -4,35 +4,39 @@
     <title>Local association learning in JS</title>
     <link rel="stylesheet" href="main.css">
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@200&display=swap" rel="stylesheet">
+	<!link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+
 </head>
 <script src="papaparse.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
 <script src="app.js"></script>
-
 <body>
     <div class="wrapper">
         <h1 id="h1">Local Association Learning in your Browser using JS</h1>
         <p id="p1">Better understand your bank bill, or your shopping list! No upload to a remote server is necessary! Open the
             networking tab in the developer console to inspect request!</p>
-        
+			
+
+		
         <div class="input_container">
-            <p id="results"></p>
+
+			<label for="dwn-btn" class="csv-file">Upload a CSV file</label>
+			<input type="button" id="dwn-btn" value="Download rules.csv file"/>
+			<br>
+			<label for="csv-file" class="choose-file">choose file</label>
+			<input type="file" id="csv-file" name="files"/>    
+			
+			
             <pre id="rules"></pre>
-
-            <label for="dwn-btn" class="csv-file">Upload a CSV file</label>
-            <input type="button" id="dwn-btn" value="Download rules.csv file" />
-            
-            <br>
-
-
-            <label for="csv-file" class="choose-file">choose file</label>
-            <input type="file" id="csv-file" name="files" />
+			
         </div>
     </div>
-    <div class="tableview">
-
+	<div id="keywords">
     </div>
+	<div id="results">
+	</div>
+	<output>First row must contain headers</output>
 </body>
 
 </html>

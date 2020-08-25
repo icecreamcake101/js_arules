@@ -635,6 +635,29 @@
 window['data'] = {};
 window['csv_result'] = {}
 
+function printPapaObject(papa) {
+        var header = "";
+        var tbody = "";
+        for (var p in papa.meta.fields) {
+          header += "<th>" + papa.meta.fields[p] + "</th>";
+        }
+        for (var i = 0; i < papa.data.length; i++) {
+          var row = "";
+          for (var z in papa.data[i]) {
+            row += "<td>" + papa.data[i][z] + "</td>";
+          }
+          tbody += "<tr>" + row + "</tr>";
+        }
+        //build a table
+        $("output").html(
+          '<table class="table"><thead>' +
+            header +
+            "</thead><tbody>" +
+            tbody +
+            "</tbody></table>"
+        );
+}
+	  
 function handleFileSelect(evt) {
     var file = evt.target.files[0];
     Papa.parse(file, {
@@ -668,23 +691,35 @@ function handleFileSelect(evt) {
             var rhss = result.map(function(elem) {
                 return elem.rhs.join(" && ")
             });
+			
             var lhss = result.map(function(elem) {
                 return elem.lhs.join(" && ")
             });
+			nodes = Array.from(new Set(_.flatten(_.pluck(result, 'lhs')).concat(_.flatten(_.pluck(result, 'rhs')))))
+			console.log(nodes)
+			$.each(nodes, function(i, w){
+				$("#keywords").append($('<span class="highlight">').text(w));
+			});
             var confidences = result.map(function(elem) {
                 return elem.confidence
             });
             var couples = lhss.map(function(e, i) {
                 return e + " &#8658 " + rhss[i] + "  -- Confidence: " + confidences[i];
             });
-            document.getElementById("rules").innerHTML = JSON.stringify(couples, undefined, 2);
-            document.getElementById("results").innerHTML = JSON.stringify(result);
-            createTableView(data)
-            console.log(data)
+			var sentences = document.querySelector('#results');
+			var keywords = document.querySelector('#keywords');
 
+			keywords.addEventListener('click', function(event){
+				var target = event.target;
+				var text = sentences.textContent;
+				var regex = new RegExp('('+target.textContent+')', 'ig');
+				text = text.replace(regex, '<span class="highlight">$1</span>');
+				sentences.innerHTML = text;
+			}, false);
+            document.getElementById("results").innerHTML = couples.join("\n");
+			printPapaObject(results);
         }
     });
-
 }
 
 $(document).ready(function() {
@@ -710,67 +745,5 @@ function download(filename, text) {
     document.body.appendChild(element);
 
     element.click();
-
     document.body.removeChild(element);
-}
-
-
-function createTableView({data, errors, meta}) {
-    // get the table fields
-    let {fields} = meta;
-
-    makeTable(data.slice(0,10), fields);
-}
-
-function createTableHeader(fields) {
-    // get fields length and create th element accordingly
-    let columnCount = fields.length;
-
-    // table heading
-    let th = fields.reduce((init, field) => {
-        return init + `<th>${field}</th>`
-    }, '')
-
-    return makeRow(th)
-}
-
-function makeRow(row) {
-    let tr = `<tr>${row}</tr>`;
-    return makeTableChildren(tr);
-}
-
-function makeTableChildren(children, type = "thead") {
-    children = `<${type}> ${children} </${type}> `;
-    return children;
-}
-
-function makeTableBody(children, fields) {
-
-    children = children.reduce((init, child) => {
-
-        let thisRow = fields.reduce((initField, field) => {
-
-            return initField + `<td>${child[field]}</td>`
-        }, '')
-
-
-        return init + makeRow(thisRow)
-    }, '')
-    return makeTableChildren(children, 'tbody');
-}
-
-function makeTable(data, fields) {
-    // Make table heading
-    let thead = createTableHeader(fields);
-
-    // Make table body
-    let tbody = makeTableBody(data, fields)
-
-    let tableView = document.querySelector('.tableview')
-    tableView.innerHTML = `
-        <table>
-            ${thead}
-            ${tbody}
-        </table>
-    `;
 }
