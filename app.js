@@ -647,11 +647,11 @@ function printPapaObject(papa) {
     }
     //build a table
     $("output").html(
-        '<table class="table"><thead>' +
+        '<div style="overflow:auto; height:400px; width:1000px;"><table class="table"><thead>' +
         header +
         "</thead><tbody>" +
         tbody +
-        "</tbody></table>"
+        "</tbody></table></div>"
     );
 }
 
@@ -742,6 +742,7 @@ function handleFileSelect(evt) {
 					.filter(function(elem){return elem.confidence < 1})
 					.map(function(elem){return {'source': parseInt(nodes_indexes[elem['rhs'][0]]), 'target': parseInt(nodes_indexes[elem['lhs'][0]]), 'value': Math.floor(elem.confidence * 10 + 1)}})
 			nodes = _.map(nodes, function(node) {return {name: node, group: 1}}); // Math.floor((Math.random())*10 +1) // group = [1:10]
+			// console.log(links)
 			input = { nodes : nodes, links : links }
 			createAdjacencyMatrix(input);
 			function createAdjacencyMatrix(data) {
