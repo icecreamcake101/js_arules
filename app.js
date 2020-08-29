@@ -736,10 +736,13 @@ function handleFileSelect(evt) {
 			result0 = _.clone(result)
 			nodes = Array.from(new Set(_.flatten(_.pluck(result0, 'lhs')).concat(_.flatten(_.pluck(result0, 'rhs')))))
 			nodes_indexes = _.invert(nodes)
-			links = result0.map(function(elem){return {'source': nodes_indexes[elem['rhs'][0]], 'target': nodes_indexes[elem['lhs'][0]], 'value': elem.confidence}})	
+			// links = result0.map(function(elem){return {'source': elem['rhs'][0], 'target': elem['lhs'][0], 'value': elem.confidence}})
+			// console.log(links)
+			links = result0.map(function(elem){return {'source': nodes_indexes[elem['rhs'][0]], 'target': nodes_indexes[elem['lhs'][0]], 'value': elem.confidence}})
+			// console.log(links)			
 			nodes = _.map(nodes, function(node) {return {name: node, group: 1}})
 			input = { nodes : nodes, links : links }
-			console.log(input)
+			// console.log(input)
 			createAdjacencyMatrix(input);
 			function createAdjacencyMatrix(data) {
 			  const adjacencyMatrix = d3.adjacencyMatrixLayout();
