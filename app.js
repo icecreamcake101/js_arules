@@ -738,11 +738,11 @@ function handleFileSelect(evt) {
 			nodes_indexes = _.invert(nodes)
 			// links = result0.map(function(elem){return {'source': elem['rhs'][0], 'target': elem['lhs'][0], 'value': elem.confidence}})
 			// console.log(links)
-			links = result0.map(function(elem){return {'source': nodes_indexes[elem['rhs'][0]], 'target': nodes_indexes[elem['lhs'][0]], 'value': elem.confidence}})
-			// console.log(links)			
-			nodes = _.map(nodes, function(node) {return {name: node, group: 1}})
+			links = result0
+					.filter(function(elem){return elem.confidence < 1})
+					.map(function(elem){return {'source': parseInt(nodes_indexes[elem['rhs'][0]]), 'target': parseInt(nodes_indexes[elem['lhs'][0]]), 'value': Math.floor(elem.confidence * 10 + 1)}})
+			nodes = _.map(nodes, function(node) {return {name: node, group: 1}}); // Math.floor((Math.random())*10 +1) // group = [1:10]
 			input = { nodes : nodes, links : links }
-			// console.log(input)
 			createAdjacencyMatrix(input);
 			function createAdjacencyMatrix(data) {
 			  const adjacencyMatrix = d3.adjacencyMatrixLayout();
@@ -756,7 +756,7 @@ function handleFileSelect(evt) {
 				.directed(false)
 				.nodeID(d => d.name);
 
-			  const matrixData = adjacencyMatrix().map(function(elem){ elem.weight = 1; return elem} );
+			  const matrixData = adjacencyMatrix();
 
 			  console.log(matrixData)
 
