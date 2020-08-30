@@ -627,111 +627,113 @@
     }
     .call(this));
 
+
 window['data'] = {};
 window['csv_result'] = {}
 
 function printPapaObject(papa) {
-    var header = "";
-    var tbody = "";
-    for (var p in papa.meta.fields) {
-        header += "<th>" + papa.meta.fields[p] + "</th>";
-    }
-    var error_indices = _.pluck(papa.errors, 'row');
-    var rows = papa.data;
-    for (var i = 0; i < rows.length && !_.contains(error_indices, i); i++) {
-        var row = "";
-        for (var z in rows[i]) {
-            row += "<td>" + rows[i][z] + "</td>";
-        }
-        tbody += "<tr>" + row + "</tr>";
-    }
-    //build a table
-    $("output").html(
-        '<div style="overflow:auto; height:400px; width:1000px;"><table class="table"><thead>' +
-        header +
-        "</thead><tbody>" +
-        tbody +
-        "</tbody></table></div>"
-    );
+	var header = "";
+	var tbody = "";
+	for (var p in papa.meta.fields) {
+		header += "<th>" + papa.meta.fields[p] + "</th>";
+	}
+	var error_indices = _.pluck(papa.errors, 'row');
+	var rows = papa.data;
+	for (var i = 0; i < rows.length && !_.contains(error_indices, i); i++) {
+		var row = "";
+		for (var z in rows[i]) {
+			row += "<td>" + rows[i][z] + "</td>";
+		}
+		tbody += "<tr>" + row + "</tr>";
+	}
+	//build a table
+	$("output").html(
+		'<div style="overflow:auto; height:400px; width:1000px;"><table class="table"><thead>' +
+		header +
+		"</thead><tbody>" +
+		tbody +
+		"</tbody></table></div>"
+	);
 }
 
 function handleFileSelect(evt) {
-    var file = evt.target.files[0];
-    Papa.parse(file, {
-        header: true,
-        dynamicTyping: true,
-        worker: true,
-        complete: function(results) {
-            window.data = results;
+	var file = evt.target.files[0];
+	Papa.parse(file, {
+		header: true,
+		dynamicTyping: true,
+		worker: true,
+		complete: function (results) {
+			window.data = results;
 			// ======================== Sanitization ========================
-            sparse_columns = [];
-            if (results.errors > 0)
-                console.error(result.errors);
-            data.meta.fields.map(function(column) {
-                value_count = _.countBy(_.pluck(data.data, column))[null];
-                if (value_count >= 0 && value_count / data.data.length > 0.8)
-                    sparse_columns.push(column)
-            })
-            var error_indices = _.pluck(data.errors, 'row');
+			sparse_columns = [];
+			if (results.errors > 0)
+				console.error(result.errors);
+			data.meta.fields.map(function (column) {
+				value_count = _.countBy(_.pluck(data.data, column))[null];
+				if (value_count >= 0 && value_count / data.data.length > 0.8)
+					sparse_columns.push(column)
+			})
+			var error_indices = _.pluck(data.errors, 'row');
 
-            var learning_dataset = _.map(data.data, function(row, idx) {
-                if (_.contains(error_indices, idx))
-                    return
-                return _.omit(row, sparse_columns);
-            }).filter(function(elem) {
-                return elem
-            }).slice(0, 200);
-			
+			var learning_dataset = _.map(data.data, function (row, idx) {
+				if (_.contains(error_indices, idx))
+					return
+				return _.omit(row, sparse_columns);
+			}).filter(function (elem) {
+				return elem
+			}).slice(0, 200);
+
 			// ======================== Ignore if all values are unique ========================
-			
-			
+
+
 			// ======================== Compression ========================
-            JSONC.compress(learning_dataset)
-			
+			JSONC.compress(learning_dataset)
+
 			// Format for Apriori
-            // header = "\"" + _.values(learning_dataset[0]._).join("\",\"") + "\"\n";
-            learning_dataset = _.map(learning_dataset, function(obj) {
-                return "\"" + _.values(obj).slice(0, -1).join("\",\"") + "\"\n"
-            }).join('');
+			// header = "\"" + _.values(learning_dataset[0]._).join("\",\"") + "\"\n";
+			learning_dataset = _.map(learning_dataset, function (obj) {
+				return "\"" + _.values(obj).slice(0, -1).join("\",\"") + "\"\n"
+			}).join('');
 
 			// ======================== Mining ========================
-            result = new Apriori.Algorithm(0.01, 0.01, false).showAnalysisResult(learning_dataset).filter(function(elem) {
-                return elem.lhs[0] != "''" && elem.rhs[0] != "''"
-            });
-            window.csv_result = Papa.unparse(result);
+			result = new Apriori.Algorithm(0.01, 0.01, false).showAnalysisResult(learning_dataset).filter(function (elem) {
+				return elem.lhs[0] != "''" && elem.rhs[0] != "''"
+			});
+			window.csv_result = Papa.unparse(result);
 
 			// ======================== Output HTML formatting ========================
-            var rhss = result.map(function(elem) {
-                return elem.rhs.join(" && ")
-            });
+			var rhss = result.map(function (elem) {
+				return elem.rhs.join(" && ")
+			});
 
-            var lhss = result.map(function(elem) {
-                return elem.lhs.join(" && ")
-            });
-            nodes = Array.from(new Set(_.flatten(_.pluck(result, 'lhs')).concat(_.flatten(_.pluck(result, 'rhs')))))
-            $.each(nodes, function(i, w) {
-                $("#keywords").append($('<span class="highlight">').text(w));
-            });
-            var confidences = result.map(function(elem) {
-                return elem.confidence
-            });
-            var couples = lhss.map(function(e, i) {
-                return e + " &#8658 " + rhss[i] + "  -- Confidence: " + confidences[i];
-            });
-            var sentences = document.querySelector('#results');
-            var keywords = document.querySelector('#keywords');
+			var lhss = result.map(function (elem) {
+				return elem.lhs.join(" && ")
+			});
+			nodes = Array.from(new Set(_.flatten(_.pluck(result, 'lhs')).concat(_.flatten(_.pluck(result, 'rhs')))))
+			$.each(nodes, function (i, w) {
+				$("#keywords").append($('<span class="highlight">').text(w));
+			});
+			var confidences = result.map(function (elem) {
+				return elem.confidence
+			});
+			var couples = lhss.map(function (e, i) {
+				return e + " ⇒ " + rhss[i] + "  -- Confidence: " + confidences[i];
+			});
+			var sentences = document.querySelector('#results');
+			var keywords = document.querySelector('#keywords');
 
 			// ======================== Output HTML formatting for keywords highlighting ========================
-            keywords.addEventListener('click', function(event) {
-                var target = event.target;
-                var text = sentences.textContent;
-                var regex = new RegExp('(' + target.textContent + ')', 'ig');
-                text = text.replace(regex, '<span class="highlight">$1</span>');
-                sentences.innerHTML = text;
-            }, false);
-            document.getElementById("results").innerHTML = couples.join("\n");
-            printPapaObject(results);
-			
+			keywords.addEventListener('click', function (event) {
+				var target = event.target;
+				var text = sentences.textContent;
+				var regex = new RegExp('(' + target.textContent + ')', 'ig');
+				text = text.replace(regex, '<span class="highlight">$1</span>');
+				sentences.innerHTML = text;
+			}, false);
+			document.getElementById("results").innerHTML = couples.join("\n");
+			// document.getElementById("results").style = 
+			printPapaObject(results);
+
 			// Adjacency matrix
 			result0 = _.clone(result)
 			nodes = Array.from(new Set(_.flatten(_.pluck(result0, 'lhs')).concat(_.flatten(_.pluck(result0, 'rhs')))))
@@ -739,39 +741,56 @@ function handleFileSelect(evt) {
 			// links = result0.map(function(elem){return {'source': elem['rhs'][0], 'target': elem['lhs'][0], 'value': elem.confidence}})
 			// console.log(links)
 			links = result0
-					.filter(function(elem){return elem.confidence < 1})
-					.map(function(elem){return {'source': parseInt(nodes_indexes[elem['rhs'][0]]), 'target': parseInt(nodes_indexes[elem['lhs'][0]]), 'value': Math.floor(elem.confidence * 10 + 1)}})
-			nodes = _.map(nodes, function(node) {return {name: node, group: 1}}); // Math.floor((Math.random())*10 +1) // group = [1:10]
+				.filter(function (elem) {
+					return elem.confidence < 1
+				})
+				.map(function (elem) {
+					return {
+						'source': parseInt(nodes_indexes[elem['rhs'][0]]),
+						'target': parseInt(nodes_indexes[elem['lhs'][0]]),
+						'value': Math.floor(elem.confidence * 10 + 1)
+					}
+				})
+			nodes = _.map(nodes, function (node) {
+				return {
+					name: node,
+					group: 1
+				}
+			}); // Math.floor((Math.random())*10 +1) // group = [1:10]
 			// console.log(links)
-			input = { nodes : nodes, links : links }
+			input = {
+				nodes: nodes,
+				links: links
+			}
 			createAdjacencyMatrix(input);
+
 			function createAdjacencyMatrix(data) {
-			  const adjacencyMatrix = d3.adjacencyMatrixLayout();
-			  console.log('adjacencyMatrix', adjacencyMatrix);
-			  console.log('d3', d3);
+				const adjacencyMatrix = d3.adjacencyMatrixLayout();
+				console.log('adjacencyMatrix', adjacencyMatrix);
+				console.log('d3', d3);
 
-			  adjacencyMatrix
-				.size([870,870])
-				.nodes(data.nodes)
-				.links(data.links)
-				.directed(false)
-				.nodeID(d => d.name);
+				adjacencyMatrix
+					.size([870, 870])
+					.nodes(data.nodes)
+					.links(data.links)
+					.directed(false)
+					.nodeID(d => d.name);
 
-			  const matrixData = adjacencyMatrix();
+				const matrixData = adjacencyMatrix();
 
-			  console.log(matrixData)
+				console.log(matrixData)
 
-			  const someColors = d3.scaleOrdinal()
-				.range(d3.schemeCategory20b);
+				const someColors = d3.scaleOrdinal()
+					.range(d3.schemeCategory20b);
 
-			  d3.select('svg')
-				.append('g')
-				  .attr('transform', 'translate(80,80)')
-				  .attr('id', 'adjacencyG')
-				  .selectAll('rect')
-				  .data(matrixData)
-				  .enter()
-				  .append('rect')
+				d3.select('svg')
+					.append('g')
+					.attr('transform', 'translate(80,80)')
+					.attr('id', 'adjacencyG')
+					.selectAll('rect')
+					.data(matrixData)
+					.enter()
+					.append('rect')
 					.attr('width', d => d.width)
 					.attr('height', d => d.height)
 					.attr('x', d => d.x)
@@ -781,39 +800,40 @@ function handleFileSelect(evt) {
 					.style('stroke-opacity', .1)
 					.style('fill', d => someColors(d.source.group))
 					.style('fill-opacity', d => d.weight * 0.8);
+				d3.select('#adjacencyG')
+					.call(adjacencyMatrix.xAxis);
 
-			  d3.select('#adjacencyG')
-				.call(adjacencyMatrix.xAxis);
-
-			  d3.select('#adjacencyG')
-				.call(adjacencyMatrix.yAxis);
+				d3.select('#adjacencyG')
+					.call(adjacencyMatrix.yAxis);
 			}
-        }
-    });
+		}
+	});
 }
 
-$(document).ready(function() {
-    $("#csv-file").change(handleFileSelect);
-    // Start file download.
-    document.getElementById("dwn-btn").addEventListener("click", function() {
-        // Generate download of hello.txt file with some content
-        if (!_.isEmpty(window.csv_result)) {
-            var text = window.csv_result;
-            var filename = "rules.csv";
-            download(filename, text);
-        }
-    }, false);
+$(document).ready(function () {
+	$("#csv-file").change(handleFileSelect);
+	// Start file download.
+	document.getElementById("dwn-btn").addEventListener("click", function () {
+		// Generate download of hello.txt file with some content
+		if (!_.isEmpty(window.csv_result)) {
+			var text = window.csv_result;
+			var filename = "rules.csv";
+			download(filename, text);
+		}
+	}, false);
 
 });
 
 function download(filename, text) {
-    var element = document.createElement('a');
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-    element.setAttribute('download', filename);
+	var element = document.createElement('a');
+	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+	element.setAttribute('download', filename);
 
-    element.style.display = 'none';
-    document.body.appendChild(element);
+	element.style.display = 'none';
+	document.body.appendChild(element);
 
-    element.click();
-    document.body.removeChild(element);
+	element.click();
+	document.body.removeChild(element);
 }
+
+

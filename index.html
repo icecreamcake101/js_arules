@@ -1,74 +1,99 @@
+
+
 <html>
+   <head>
+      <title>Local association learning in JS</title>
+      <link rel="stylesheet" href="main.css">
+      <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@200&display=swap" rel="stylesheet">
+      <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+   </head>
+   
+   <style>
+		svg {
+			border: 0px solid gray;
+			background-color: rgba(255, 90, 90, 0.931);
+		}
 
-<head>
-    <title>Local association learning in JS</title>
-    <link rel="stylesheet" href="main.css">
-    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@200&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"> 
+		g.am-axis text {
+			font-size: 8px;
+		}
+
+		.domain {
+			fill: none;
+		}
+
+		.tick>line {
+			stroke: black;
+			stroke-width: 1px;
+			stroke-opacity: 0.25;
+		}
 
 
+		/* The emerging W3C standard
+			  that is currently Firefox-only */
 
-</head>
-<style>
-  svg {
-    border: 0px solid gray;
-	background-color: rgba(225, 225, 225, .9) ;
-  }
-  g.am-axis text {
-    font-size: 8px;
-  }
+		* {
+			scrollbar-width: thin;
+			scrollbar-color: rgb(29, 17, 78) rgba(255, 90, 90, 0.931);
+		}
 
-  .domain {
-    fill: none;
-  }
 
-  .tick > line{
-    stroke: black;
-    stroke-width: 1px;
-    stroke-opacity: 0.25;
-  }
-</style>
-<script src="papaparse.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
-<script src="app.js"></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js'></script>
-<script src='d3-adjacency-matrix-layout.js' type='text/JavaScript'></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.10.3/babel.min.js'></script>
-<body>
-    <div class="wrapper">
-        <h1 id="h1">Local Association Learning right in your Browser</h1>
-        <p id="p1">Better understand your bank bill, or your shopping list! No upload to a remote server is necessary!</p>
+		/* Works on Chrome/Edge/Safari */
 
-        <div class="input_container">
+		*::-webkit-scrollbar {
+			width: 12px;
+		}
 
+		*::-webkit-scrollbar-track {
+			background: rgba(255, 90, 90, 0.931);
+		}
+
+		*::-webkit-scrollbar-thumb {
+			background-color: rgb(29, 17, 78);
+			border-radius: 20px;
+			border: 3px solid rgba(255, 90, 90, 0.931);
+		}
+   </style>
+   
+   <script src="papaparse.js"></script>
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
+   <script src="app.js"></script>
+   <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js'></script>
+   <script src='d3-adjacency-matrix-layout.js' type='text/JavaScript'></script>
+   <script src='https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.10.3/babel.min.js'></script>
+   <body>
+      <div class="wrapper">
+         <h1 id="h1">Local Association Learning right in your Browser</h1>
+         <p id="p1">Better understand your bank bill, or your shopping list! No upload to a remote server is necessary! This is based on Association rules mining algorithm. 
+            Read <a href="https://www.kdnuggets.com/2016/04/association-rules-apriori-algorithm-tutorial.html"> here</a> for a better understanding.
+         </p>
+         <div class="input_container">
             <label for="dwn-btn" class="csv-file">Download rules</label>
             <input type="button" id="dwn-btn" value="Download rules.csv file" />
             <label for="csv-file" class="choose-file">Upload</label>
             <input type="file" id="csv-file" name="files" />
-
-        </div>
-		<hr>
-        <div id="keywords"></div>
-        <div id="results" style="overflow:auto; height:400px; width:1000px;"></div>
-		
-		<output>First row must contain headers</output>
-		<hr>
-		
-		<svg style="auto" height="960px" width="960px"></svg>
-		<div id='controls'></div>
-	</div>
-    <div class="footer">
-	  <ul>
-		<li><a href="https://github.com/bacloud14/js_arules">See on GitHub</a></li>
-		<li><a href="https://datasciencetoday.net/index.php/en-us/machine-learning/179-association-rules">Read about Association rules</a></li>
-		<li><a href="https://github.com/seratch/apriori.js">apriori.js </a></li>
-		<li>
-		  <p>👋</p>
-		</li>
-	  </ul>
-	</div>
-	
-</body>
-
+         </div>
+         <hr>
+         <div id="keywords"></div>
+		 <hr>
+         <div id="results" style="overflow:auto; height:400px; width:1000px;"></div>
+		 <hr>
+         <output></output>
+         <hr>
+         <svg style="auto" height="960px" width="960px"></svg>
+         <div id='controls'></div>
+      </div>
+      <div class="footer">
+         <ul>
+            <li><a href="https://github.com/bacloud14/js_arules">See on GitHub</a></li>
+            <li><a href="https://datasciencetoday.net/index.php/en-us/machine-learning/179-association-rules">Read about Association rules</a></li>
+            <li><a href="https://github.com/seratch/apriori.js">apriori.js </a></li>
+            <li>
+               <p>👋</p>
+            </li>
+         </ul>
+      </div>
+   </body>
 </html>
+
