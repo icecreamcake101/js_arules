@@ -91,6 +91,15 @@
                     });
                     return found;
                 };
+				
+				/*
+					for(var i = 0; i < foundSubSets.length; i++) {
+                        if (!found)
+                            found = foundSubSets[i].toString() === itemSet.toString();
+						if(found)
+							return true
+                    };
+				*/
 
                 if (self.debugMode) {
                     console.log('Before calculating association rules: ' + self.getTime(beforeMillis) + ' ms');
@@ -268,6 +277,11 @@
                 return isSubSetArray;
             };
             ArrayUtils.getDiffArray = function(arrayA, arrayB) {
+				/*
+					arrayA = new Set(arrayA)
+					arrayB = new Set(arrayB)
+					return [...new Set([...arrayA].filter(x => !arrayB.has(x)))]
+				*/
                 var diffArray = [];
                 arrayA.forEach(function(e) {
                     if (arrayB.indexOf(e) === -1)
@@ -648,7 +662,7 @@ function printPapaObject(papa) {
 	}
 	//build a table
 	$("output").html(
-		'<div style="overflow:auto; height:400px; width:1000px;"><table class="table"><thead>' +
+		'<div style="overflow:auto; height:400px;"><table class="table"><thead>' +
 		header +
 		"</thead><tbody>" +
 		tbody +
@@ -731,7 +745,7 @@ function handleFileSelect(evt) {
 				sentences.innerHTML = text;
 			}, false);
 			document.getElementById("results").innerHTML = couples.join("\n");
-			// document.getElementById("results").style = 
+			document.getElementById("results").style = "overflow:auto; height:400px;"
 			printPapaObject(results);
 
 			// Adjacency matrix
@@ -763,7 +777,7 @@ function handleFileSelect(evt) {
 				links: links
 			}
 			createAdjacencyMatrix(input);
-
+			document.getElementById("adjacency-matrix-layout").setAttribute("style", "overflow:auto; height:960px; width:960px;")
 			function createAdjacencyMatrix(data) {
 				const adjacencyMatrix = d3.adjacencyMatrixLayout();
 				console.log('adjacencyMatrix', adjacencyMatrix);
@@ -800,6 +814,7 @@ function handleFileSelect(evt) {
 					.style('stroke-opacity', .1)
 					.style('fill', d => someColors(d.source.group))
 					.style('fill-opacity', d => d.weight * 0.8);
+				// style="auto" height="960px" width="960px"
 				d3.select('#adjacencyG')
 					.call(adjacencyMatrix.xAxis);
 
