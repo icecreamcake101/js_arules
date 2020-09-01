@@ -343,7 +343,7 @@ function printPapaObject(papa) {
 	}
 	//build a table
 	$("output").html(
-		'<div style="overflow:auto; height:400px;"><table class="table"><thead>' +
+		'<div style="overflow:auto; height:400px;"><table class="pure"><thead>' +
 		header +
 		"</thead><tbody>" +
 		tbody +
