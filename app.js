@@ -1,327 +1,4 @@
-
-
-///////////////////////////////
-// taken as is from https://github.com/tcorral/JSONC
-
-/*global gzip, Base64*/
-(function() {
-
-        var root, JSONC = {},
-            isNodeEnvironment, _nCode = -1,
-            toString = {}.toString;
-
-        /**
-         * set the correct root depending from the environment.
-         * @type {Object}
-         * @private
-         */
-        root = this;
-        /**
-         * Check if JSONC is loaded in Node.js environment
-         * @type {Boolean}
-         * @private
-         */
-        isNodeEnvironment = typeof exports === 'object' && typeof module === 'object' && typeof module.exports === 'object' && typeof require === 'function';
-        /**
-         * Checks if the value exist in the array.
-         * @param arr
-         * @param v
-         * @returns {boolean}
-         */
-        function contains(arr, v) {
-            var nIndex, nLen = arr.length;
-            for (nIndex = 0; nIndex < nLen; nIndex++) {
-                if (arr[nIndex][1] === v) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /**
-         * Removes duplicated values in an array
-         * @param oldArray
-         * @returns {Array}
-         */
-        function unique(oldArray) {
-            var nIndex, nLen = oldArray.length,
-                aArr = [];
-            for (nIndex = 0; nIndex < nLen; nIndex++) {
-                if (!contains(aArr, oldArray[nIndex][1])) {
-                    aArr.push(oldArray[nIndex]);
-                }
-            }
-            return aArr;
-        }
-
-        /**
-         * Escapes a RegExp
-         * @param text
-         * @returns {*}
-         */
-        function escapeRegExp(text) {
-            return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-        }
-
-        /**
-         * Returns if the obj is an object or not.
-         * @param obj
-         * @returns {boolean}
-         * @private
-         */
-        function _isObject(obj) {
-            return toString.call(obj) === '[object Object]';
-        }
-
-        /**
-         * Returns if the obj is an array or not
-         * @param obj
-         * @returns {boolean}
-         * @private
-         */
-        function _isArray(obj) {
-            return toString.call(obj) === '[object Array]';
-        }
-
-        /**
-         * Converts a bidimensional array to object
-         * @param aArr
-         * @returns {{}}
-         * @private
-         */
-        function _biDimensionalArrayToObject(aArr) {
-            var obj = {},
-                nIndex, nLen = aArr.length,
-                oItem;
-            for (nIndex = 0; nIndex < nLen; nIndex++) {
-                oItem = aArr[nIndex];
-                obj[oItem[0]] = oItem[1];
-            }
-            return obj;
-        }
-
-        /**
-         * Convert a number to their ascii code/s.
-         * @param index
-         * @param totalChar
-         * @param offset
-         * @returns {Array}
-         * @private
-         */
-        function _numberToKey(index, totalChar, offset) {
-            var sKeys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=_!?()*',
-                aArr = [],
-                currentChar = index;
-            totalChar = totalChar || sKeys.length;
-            offset = offset || 0;
-            while (currentChar >= totalChar) {
-                aArr.push(sKeys.charCodeAt((currentChar % totalChar) + offset));
-                currentChar = Math.floor(currentChar / totalChar - 1);
-            }
-            aArr.push(sKeys.charCodeAt(currentChar + offset));
-            return aArr.reverse();
-        }
-
-        /**
-         * Returns the string using an array of ASCII values
-         * @param aKeys
-         * @returns {string}
-         * @private
-         */
-        function _getSpecialKey(aKeys) {
-            return String.fromCharCode.apply(String, aKeys);
-        }
-
-        /**
-         * Traverse all the objects looking for keys and set an array with the new keys
-         * @param json
-         * @param aKeys
-         * @returns {*}
-         * @private
-         */
-        function _getKeys(json, aKeys) {
-            var aKey, sKey, oItem;
-
-            for (sKey in json) {
-
-                if (json.hasOwnProperty(sKey)) {
-                    oItem = json[sKey];
-                    if (_isObject(oItem) || _isArray(oItem)) {
-                        aKeys = aKeys.concat(unique(_getKeys(oItem, aKeys)));
-                    }
-                    if (isNaN(Number(sKey))) {
-                        if (!contains(aKeys, sKey)) {
-                            _nCode += 1;
-                            aKey = [];
-                            aKey.push(_getSpecialKey(_numberToKey(_nCode)), sKey);
-                            aKeys.push(aKey);
-                        }
-                    }
-                }
-            }
-            return aKeys;
-        }
-
-        /**
-         * Method to compress array objects
-         * @private
-         * @param json
-         * @param aKeys
-         */
-        function _compressArray(json, aKeys) {
-            var nIndex, nLenKeys;
-
-            for (nIndex = 0,
-                nLenKeys = json.length; nIndex < nLenKeys; nIndex++) {
-                json[nIndex] = JSONC.compress(json[nIndex], aKeys);
-            }
-        }
-
-        /**
-         * Method to compress anything but array
-         * @private
-         * @param json
-         * @param aKeys
-         * @returns {*}
-         */
-        function _compressOther(json, aKeys) {
-            var oKeys, aKey, str, nLenKeys, nIndex, obj;
-            aKeys = _getKeys(json, aKeys);
-            aKeys = unique(aKeys);
-            oKeys = _biDimensionalArrayToObject(aKeys);
-
-            str = JSON.stringify(json);
-            nLenKeys = aKeys.length;
-
-            for (nIndex = 0; nIndex < nLenKeys; nIndex++) {
-                aKey = aKeys[nIndex];
-                str = str.replace(new RegExp(escapeRegExp('"' + aKey[1] + '"'), 'g'), '"' + aKey[0] + '"');
-            }
-            obj = JSON.parse(str);
-            obj._ = oKeys;
-            return obj;
-        }
-
-        /**
-         * Method to decompress array objects
-         * @private
-         * @param json
-         */
-        function _decompressArray(json) {
-            var nIndex, nLenKeys;
-
-            for (nIndex = 0,
-                nLenKeys = json.length; nIndex < nLenKeys; nIndex++) {
-                json[nIndex] = JSONC.decompress(json[nIndex]);
-            }
-        }
-
-        /**
-         * Method to decompress anything but array
-         * @private
-         * @param jsonCopy
-         * @returns {*}
-         */
-        function _decompressOther(jsonCopy) {
-            var oKeys, str, sKey;
-
-            oKeys = JSON.parse(JSON.stringify(jsonCopy._));
-            delete jsonCopy._;
-            str = JSON.stringify(jsonCopy);
-            for (sKey in oKeys) {
-                if (oKeys.hasOwnProperty(sKey)) {
-                    str = str.replace(new RegExp('"' + sKey + '"', 'g'), '"' + oKeys[sKey] + '"');
-                }
-            }
-            return str;
-        }
-
-        /**
-         * Compress a RAW JSON
-         * @param json
-         * @param optKeys
-         * @returns {*}
-         */
-        JSONC.compress = function(json, optKeys) {
-            if (!optKeys) {
-                _nCode = -1;
-            }
-            var aKeys = optKeys || [],
-                obj;
-
-            if (_isArray(json)) {
-                _compressArray(json, aKeys);
-                obj = json;
-            } else {
-                obj = _compressOther(json, aKeys);
-            }
-            return obj;
-        };
-        /**
-         * Use LZString to get the compressed string.
-         * @param json
-         * @param bCompress
-         * @returns {String}
-         */
-        JSONC.pack = function(json, bCompress) {
-            var str = JSON.stringify((bCompress ? JSONC.compress(json) : json));
-            return Base64.encode(String.fromCharCode.apply(String, gzip.zip(str, {
-                level: 9
-            })));
-        };
-        /**
-         * Decompress a compressed JSON
-         * @param json
-         * @returns {*}
-         */
-        JSONC.decompress = function(json) {
-            var str, jsonCopy = JSON.parse(JSON.stringify(json));
-            if (_isArray(jsonCopy)) {
-                _decompressArray(jsonCopy);
-            } else {
-                str = _decompressOther(jsonCopy);
-            }
-            return str ? JSON.parse(str) : jsonCopy;
-        };
-
-        function getArr(str) {
-            var nIndex = 0,
-                nLen = str.length,
-                arr = [];
-            for (; nIndex < nLen; nIndex++) {
-                arr.push(str.charCodeAt(nIndex));
-            }
-            return arr;
-        }
-
-        /**
-         * Returns the JSON object from the LZW string
-         * @param gzipped
-         * @param bDecompress
-         * @returns {Object}
-         */
-        JSONC.unpack = function(gzipped, bDecompress) {
-            var aArr = getArr(Base64.decode(gzipped)),
-                str = String.fromCharCode.apply(String, gzip.unzip(aArr, {
-                    level: 9
-                })),
-                json = JSON.parse(str);
-            return bDecompress ? JSONC.decompress(json) : json;
-        };
-        /*
-         * Expose Hydra to be used in node.js, as AMD module or as global
-         */
-        root.JSONC = JSONC;
-        if (isNodeEnvironment) {
-            module.exports = JSONC;
-        } else if (typeof define !== 'undefined') {
-            define('jsoncomp', [], function() {
-                return JSONC;
-            });
-        }
-    }
-    .call(this));
-
+import * as visualizer from "./visualizer.js"
 
 window['data'] = {};
 window['csv_result'] = {}
@@ -350,7 +27,9 @@ function printPapaObject(papa) {
 		"</tbody></table></div>"
 	);
 }
-
+var sparse_columns = [];
+var value_count = 0;
+var result, result0, nodes, nodes_indexes, links, links2, input, graph;
 function handleFileSelect(evt) {
 	var file = evt.target.files[0];
 	Papa.parse(file, {
@@ -359,10 +38,10 @@ function handleFileSelect(evt) {
 		worker: true,
 		complete: function (results) {
 			window.data = results;
+			
 			// ======================== Sanitization ========================
-			sparse_columns = [];
 			if (results.errors > 0)
-				console.error(result.errors);
+				console.error(results.errors);
 			data.meta.fields.map(function (column) {
 				value_count = _.countBy(_.pluck(data.data, column))[null];
 				if (value_count >= 0 && value_count / data.data.length > 0.8)
@@ -382,7 +61,7 @@ function handleFileSelect(evt) {
 
 
 			// ======================== Compression ========================
-			JSONC.compress(learning_dataset)
+			// JSONC.compress(learning_dataset) // removed
 
 			// Format for Apriori
 			// header = "\"" + _.values(learning_dataset[0]._).join("\",\"") + "\"\n";
@@ -395,6 +74,7 @@ function handleFileSelect(evt) {
 			
 			worker.onmessage = function (event) {
 					result = event.data;
+					
 					window.csv_result = Papa.unparse(result);
 
 					// ======================== Output HTML formatting ========================
@@ -417,7 +97,8 @@ function handleFileSelect(evt) {
 					});
 					var sentences = document.querySelector('#results');
 					var keywords = document.querySelector('#keywords');
-		// ======================== Output HTML formatting for keywords highlighting ========================
+					
+					// ======================== Output HTML formatting for keywords highlighting ========================
 					keywords.addEventListener('click', function (event) {
 						var target = event.target;
 						var text = sentences.textContent;
@@ -473,144 +154,8 @@ function handleFileSelect(evt) {
 						links: links2
 					}			
 					
-					createAdjacencyMatrix(input);
-					createGraph(graph)
-					document.getElementById("adjacency").setAttribute("style", "overflow:auto; height:960px; width:960px;")
-					document.getElementById("graph").setAttribute("style", "overflow:auto; height:960px; width:960px;")
-			};
-			
-			function createAdjacencyMatrix(data) {
-				const adjacencyMatrix = d3.adjacencyMatrixLayout();
-				console.log('adjacencyMatrix', adjacencyMatrix);
-				console.log('d3', d3);
-
-				adjacencyMatrix
-					.size([870, 870])
-					.nodes(data.nodes)
-					.links(data.links)
-					.directed(false)
-					.nodeID(d => d.name);
-
-				const matrixData = adjacencyMatrix();
-
-				console.log(matrixData)
-
-				const someColors = d3.scaleOrdinal()
-					.range(d3.schemeCategory20b);
-
-				d3.select('svg')
-					.append('g')
-					.attr('transform', 'translate(80,80)')
-					.attr('id', 'adjacencyG')
-					.selectAll('rect')
-					.data(matrixData)
-					.enter()
-					.append('rect')
-					.attr('width', d => d.width)
-					.attr('height', d => d.height)
-					.attr('x', d => d.x)
-					.attr('y', d => d.y)
-					.style('stroke', 'black')
-					.style('stroke-width', '1px')
-					.style('stroke-opacity', .1)
-					.style('fill', d => someColors(d.source.group))
-					.style('fill-opacity', d => d.weight * 0.8);
-				// style="auto" height="960px" width="960px"
-				d3.select('#adjacencyG')
-					.call(adjacencyMatrix.xAxis);
-
-				d3.select('#adjacencyG')
-					.call(adjacencyMatrix.yAxis);
-			}
-			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			
-			
-			function createGraph(graph) {
-				var svg = d3.select("#graph"),
-					width = +svg.attr("width"),
-					height = +svg.attr("height");
-
-				var color = d3.scaleOrdinal(d3.schemeCategory20);
-
-				var simulation = d3.forceSimulation()
-					.force("link", d3.forceLink().id(function(d) { return d.name; }))
-					.force("charge", d3.forceManyBody())
-					.force("center", d3.forceCenter(width / 2, height / 2));
-
-
-
-				var link = svg.append("g")
-				  .attr("class", "links")
-				.selectAll("line")
-				.data(graph.links)
-				.enter().append("line")
-				  .attr("stroke-width", function(d) { return Math.sqrt(d.value); });
-
-				var node = svg.append("g")
-				  .attr("class", "nodes")
-				.selectAll("g")
-				.data(graph.nodes)
-				.enter().append("g")
-
-				var circles = node.append("circle")
-				  .attr("r", 5)
-				  .attr("fill", function(d) { return color(d.group); })
-				  .call(d3.drag()
-					  .on("start", dragstarted)
-					  .on("drag", dragged)
-					  .on("end", dragended));
-
-				var lables = node.append("text")
-				  .text(function(d) {
-					return d.name;
-				  })
-				  .attr('x', 6)
-				  .attr('y', 3);
-
-				node.append("title")
-				  .text(function(d) { return d.name; });
-
-				simulation
-				  .nodes(graph.nodes)
-				  .on("tick", ticked);
-
-				simulation.force("link")
-				  .links(graph.links);
-
-				function ticked() {
-				link
-					.attr("x1", function(d) { return d.source.x; })
-					.attr("y1", function(d) { return d.source.y; })
-					.attr("x2", function(d) { return d.target.x; })
-					.attr("y2", function(d) { return d.target.y; });
-
-				node
-					.attr("transform", function(d) {
-					  return "translate(" + d.x + "," + d.y + ")";
-					})
-				}
-
-				function dragstarted(d) {
-				  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-				  d.fx = d.x;
-				  d.fy = d.y;
-				}
-
-				function dragged(d) {
-				  d.fx = d3.event.x;
-				  d.fy = d3.event.y;
-				}
-
-				function dragended(d) {
-				  if (!d3.event.active) simulation.alphaTarget(0);
-				  d.fx = null;
-				  d.fy = null;
-				}
-			}
-			
-			///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			
-			
+					visualizer.visualize(input, graph);
+			};			
 		}
 	});
 }
