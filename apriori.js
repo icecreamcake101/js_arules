@@ -15,6 +15,7 @@
     'use strict';
 
     var Apriori;
+	var co = 1;
     (function(Apriori) {
         var AnalysisResult = (function() {
             function AnalysisResult(frequentItemSets, associationRules) {
@@ -113,6 +114,8 @@
                         continue;
                     }
                     itemSets.forEach(saveAllAssociationRulesIfFound);
+					// ======================== tracking progress ========================
+					postMessage({end: false, message: (++co), max_count: Object.values(frequentItemSets).length});
                 }
                 if (self.debugMode) {
                     console.log('After calculating association rules: ' + self.getTime(beforeMillis) + ' ms');
@@ -236,6 +239,9 @@
                     op(i, array, [], allSubSets);
                 }
                 allSubSets.push(array);
+				
+
+				
                 return ArrayUtils.toArraySet(allSubSets);
             };
             ArrayUtils.toFixedSizeJoinedSets = function(itemSets, length) {
@@ -269,6 +275,7 @@
                 return diffArray;
             };
             ArrayUtils.readCSVToArray = function(inputString, delimiter) {
+				
                 delimiter = delimiter || ',';
                 var regexp = new RegExp(("(\\" + delimiter + "|\\r?\\n|\\r|^)" + "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" + "([^\"\\" + delimiter + "\\r\\n]*))"), 'gi');
                 inputString = inputString.split("\"").join("'");
@@ -303,5 +310,5 @@ self.addEventListener("message", function(e) {
     result = new Apriori.Algorithm(0.01, 0.01, false).showAnalysisResult(e.data).filter(function (elem) {
 				return elem.lhs[0] != "''" && elem.rhs[0] != "''"
 		});
-	postMessage(result);
+	postMessage({end: true, message: result});
 }, false);

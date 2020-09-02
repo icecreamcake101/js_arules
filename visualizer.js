@@ -1,7 +1,7 @@
 export function visualize (input, graph){
 	createAdjacencyMatrix(input);
 	createGraph(graph)
-	document.getElementById("adjacency").setAttribute("style", "overflow:auto; height:960px; width:960px;")
+	document.getElementById("adjacency_matrix").setAttribute("style", "overflow:auto; height:960px; width:960px;")
 	document.getElementById("graph").setAttribute("style", "overflow:auto; height:960px; width:960px;")
 }
 

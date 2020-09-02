@@ -29,7 +29,25 @@ function printPapaObject(papa) {
 }
 var sparse_columns = [];
 var value_count = 0;
-var result, result0, nodes, nodes_indexes, links, links2, input, graph;
+var result, result0, nodes, nodes_indexes, links, links2, input, graph, max_count;
+
+var i = 0;
+function move(current) {
+    var elem = document.getElementById("myBar");
+    var previous = current - 10;
+    var id = setInterval(frame, 10);
+    function frame() {
+      if (previous >= current) {
+        clearInterval(id);
+        i = 0;
+      } else {
+        previous++;
+        elem.style.width = previous + "%";
+      }
+    }
+
+}
+
 function handleFileSelect(evt) {
 	var file = evt.target.files[0];
 	Papa.parse(file, {
@@ -71,9 +89,27 @@ function handleFileSelect(evt) {
 			// ======================== Mining ========================
 			var worker = new Worker('apriori.js');
 			worker.postMessage(learning_dataset);
-			
+			/*
+				var bar = new ProgressBar.Line('#progress', {
+						  strokeWidth: 4,
+						  easing: 'easeInOut',
+						  duration: 1400,
+						  color: '#FFEA82',
+						  trailColor: '#eee',
+						  trailWidth: 1,
+						  svgStyle: {width: '100%', height: '100%'}
+						});
+			*/
 			worker.onmessage = function (event) {
-					result = event.data;
+					// ======================== tracking progress ========================
+					if (!event.data.end)
+					{
+						max_count = event.data.max_count;
+						// bar.animate((event.data.message / max_count));
+						move(Math.ceil((event.data.message / max_count)*100))
+						return
+					}
+					result = event.data.message;
 					
 					window.csv_result = Papa.unparse(result);
 
@@ -155,6 +191,7 @@ function handleFileSelect(evt) {
 					}			
 					
 					visualizer.visualize(input, graph);
+					move(100)
 			};			
 		}
 	});
