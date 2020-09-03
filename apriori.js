@@ -92,14 +92,15 @@
                 var associationRules = [];
                 var currentItemSet;
                 var saveAssociationRuleIfFound = function(subsetItemSet) {
+					var str_subsetItemSet = subsetItemSet.toString();
                     var diffItemSet = ArrayUtils.getDiffArray(currentItemSet, subsetItemSet);
                     if (diffItemSet.length > 0) {
                         var itemSupport = calculateSupport(currentItemSet, frequencies, transactions),
                             subsetSupport = calculateSupport(subsetItemSet, frequencies, transactions),
                             confidence = itemSupport / subsetSupport;
 
-                        if (!isNaN(confidence) && !isTheRuleAlreadyFound[subsetItemSet.toString()] && confidence >= self.minConfidence) {
-                            isTheRuleAlreadyFound[subsetItemSet.toString()] = 1;
+                        if (!isNaN(confidence) && !isTheRuleAlreadyFound[str_subsetItemSet] && confidence >= self.minConfidence) {
+                            isTheRuleAlreadyFound[str_subsetItemSet] = 1;
                             associationRules.push(new Apriori.AssociationRule(subsetItemSet, diffItemSet, confidence));
                         }
                     }
@@ -144,14 +145,15 @@
                     localFrequencies = {};
 
                 itemSets.forEach(function(itemSet) {
+					var str_itemSet = itemSet.toString()
                     transactions.forEach(function(transaction) {
                         if (ArrayUtils.isSubSetArrayOf(itemSet, transaction)) {
-                            if (!frequencies[itemSet.toString()])
-                                frequencies[itemSet.toString()] = 0;
-                            if (!localFrequencies[itemSet.toString()])
-                                localFrequencies[itemSet.toString()] = 0;
-                            frequencies[itemSet.toString()] += 1;
-                            localFrequencies[itemSet.toString()] += 1;
+                            if (!frequencies[str_itemSet])
+                                frequencies[str_itemSet] = 0;
+                            if (!localFrequencies[str_itemSet])
+                                localFrequencies[str_itemSet] = 0;
+                            frequencies[str_itemSet] += 1;
+                            localFrequencies[str_itemSet] += 1;
                         }
                     });
                 });
