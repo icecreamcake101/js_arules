@@ -71,8 +71,23 @@ function handleFileSelect(evt) {
 		dynamicTyping: true,
 		worker: true,
 		complete: function (results) {
+			var header = true; 
+			var shift = 0;
+			_.forEach(results.data, function(row){
+				for (var key in row) {
+					if (typeof (row[key]) == "number") {
+						delete row[key]
+						if (header)
+						{
+							results.meta.fields.splice(shift, 1);
+							shift--
+						}
+					}
+					shift++
+				}
+				header = false
+			});
 			window.data = results;
-			
 			// ======================== Sanitization ========================
 			if (results.errors > 0)
 				console.error(results.errors);
@@ -89,7 +104,7 @@ function handleFileSelect(evt) {
 				return _.omit(row, sparse_columns);
 			}).filter(function (elem) {
 				return elem
-			}).slice(0, 200);
+			})
 
 			// ======================== Ignore if all values are unique ========================
 
