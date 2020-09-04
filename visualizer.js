@@ -59,7 +59,7 @@ function createGraph(graph) {
 	var color = d3.scaleOrdinal(d3.schemeCategory20);
 
 	var simulation = d3.forceSimulation()
-		.force("link", d3.forceLink().id(function(d) { return d.name; }))
+		.force("link", d3.forceLink().id(function(d) { return d.name; }).distance(150))
 		.force("charge", d3.forceManyBody())
 		.force("center", d3.forceCenter(width / 2, height / 2));
 
@@ -79,7 +79,14 @@ function createGraph(graph) {
 	.enter().append("g")
 
 	var circles = node.append("circle")
-	  .attr("r", 5)
+	  .attr("r", function(d) {      
+	  // trying to reproduce https://stackoverflow.com/a/43906810/9164621 for visualizing weights.
+			 d.weight = link.filter(function(l) {
+			   return l.source.index == d.index || l.target.index == d.index
+			 }).size();      
+			 var minRadius = 1;
+			 return minRadius + (d.weight * 0.1);
+		})
 	  .attr("fill", function(d) { return color(d.group); })
 	  .call(d3.drag()
 		  .on("start", dragstarted)
