@@ -89,6 +89,7 @@ function handleFileSelect(evt) {
 				if(!row || Object.values(row).some(x => (x == null || x == '')))
 					results.data.splice(i, 1);
 			});
+			var which_column = results.meta.fields;
 			window.data = results;
 			// ======================== Sanitization ========================
 			if (results.errors > 0)
@@ -218,10 +219,17 @@ function handleFileSelect(evt) {
 								'value': Math.floor(elem.confidence * 10 + 1)
 							}
 						})
+					var which_group = {};
+					
+					results.data.map( x => _.invert(x))
+								.forEach(function(o){ 
+									which_group = Object.assign({}, which_group, o);
+								})
 					nodes = _.map(nodes, function (node) {
+						group = which_group[node] || which_group[node.replace("'", "").replace("'", "")]
 						return {
 							name: node,
-							group: 1
+							group: which_column.indexOf(group)
 						}
 					}); // Math.floor((Math.random())*10 +1) // group = [1:10]
 					// console.log(links)
