@@ -73,7 +73,7 @@ function handleFileSelect(evt) {
 		complete: function (results) {
 			var header = true; 
 			var shift = 0;
-			_.forEach(results.data, function(row){
+			_.forEach(results.data, function(row, i){
 				for (var key in row) {
 					if (typeof (row[key]) == "number") {
 						delete row[key]
@@ -86,6 +86,8 @@ function handleFileSelect(evt) {
 					shift++
 				}
 				header = false
+				if(!row || Object.values(row).some(x => (x == null || x == '')))
+					results.data.splice(i, 1);
 			});
 			window.data = results;
 			// ======================== Sanitization ========================
@@ -131,6 +133,8 @@ function handleFileSelect(evt) {
 						  svgStyle: {width: '100%', height: '100%'}
 						});
 			*/
+			var fire_time = new Date().getMilliseconds();
+			var current_time = new Date().getMilliseconds();
 			worker.onmessage = function (event) {
 					// ======================== tracking progress ========================
 					if (!event.data.end)
@@ -138,6 +142,15 @@ function handleFileSelect(evt) {
 						max_count = event.data.max_count;
 						// bar.animate((event.data.message / max_count));
 						move(Math.ceil((event.data.message / max_count)*100))
+						current_time = new Date().getMilliseconds();
+						console.log('(current_time - fire_time)')
+						console.log((current_time - fire_time))
+						console.log(current_time)
+						console.log(fire_time)
+						if((current_time - fire_time)>100){
+							worker.terminate();
+							console.log('bim bim')
+						}
 						return
 					}
 					result = event.data.message;

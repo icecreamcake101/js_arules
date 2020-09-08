@@ -82,7 +82,7 @@ function createGraph(graph) {
 	  .attr("r", function(d) {      
 	  // trying to reproduce https://stackoverflow.com/a/43906810/9164621 for visualizing weights.
 			 d.weight = link.filter(function(l) {
-			   return l.source.index == d.index || l.target.index == d.index
+			   return l.source == d.name || l.target == d.name
 			 }).size();      
 			 var minRadius = 1;
 			 return minRadius + (d.weight * 0.1);
