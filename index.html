@@ -73,21 +73,17 @@
 		  font-size: 10px;
 		}
 		
-/*		.progress {
-			margin: 20px;
-			width: 400px;
-			height: 8px;
-		}
-*/
 		#myProgress {
 		  width: 100%;
 		}
 
 		#myBar {
 		  width: 1%;
-		  height: 10px;
+		  height: 25px;
 		  background-color: #4CAF50;
 		}
+		
+		h2 { color: #ff9900; font-family: 'Source Sans Pro', sans-serif; font-size: 28px; font-weight: 400; line-height: 32px; margin: 0 0 24px; }
    </style>
    
    <script src="papaparse.js" async></script>
@@ -97,8 +93,7 @@
    <script type="module" src="visualizer.js" async></script>
    <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.2/d3.min.js' async></script>
    <script src='d3-adjacency-matrix-layout.js' type='text/JavaScript' async></script>
-   
-   <!script src='progressbar.min.js'></script>
+  
    <body>
       <div class="wrapper">
          <h1 id="h1">Local Association Learning right in your Browser</h1>
@@ -112,11 +107,10 @@
             <input type="file" id="csv-file" name="files" />
          </div>
 		
-		<!div class="progress" id="progress"><!/div>
 		<br>
-		Loading...
+		
 		<div id="myProgress">
-		  <div id="myBar"></div>
+		  <div id="myBar">Loading...</div>
 		</div>
 		<br>
 		 <hr>

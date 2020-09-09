@@ -23,24 +23,25 @@ function printPapaObject(papa) {
 	var header = "";
 	var tbody = "";
 	for (var p in papa.meta.fields) {
-		header += "<th>" + papa.meta.fields[p] + "</th>";
+		header += `<th> ${papa.meta.fields[p]} </th>`;
 	}
 	var error_indices = _.pluck(papa.errors, 'row');
 	var rows = papa.data;
 	for (var i = 0; i < rows.length && !_.contains(error_indices, i); i++) {
 		var row = "";
 		for (var z in rows[i]) {
-			row += "<td>" + rows[i][z] + "</td>";
+			row += `<td> ${rows[i][z]} </td>`;
 		}
-		tbody += "<tr>" + row + "</tr>";
+		tbody += `<tr> ${row} </tr>`;
 	}
 	//build a table
 	$("output").html(
-		'<div style="overflow:auto; height:400px;"><table class="pure"><thead>' +
-		header +
-		"</thead><tbody>" +
-		tbody +
-		"</tbody></table></div>"
+		`<div style='overflow:auto; height:400px;'>
+			<table class='pure'>
+				<thead>${header}</thead>
+				<tbody>${tbody}</tbody>
+			</table>
+		</div>`
 	);
 }
 var sparse_columns = [];
@@ -49,7 +50,13 @@ var result, result0, nodes, nodes_indexes, links, links2, input, graph, max_coun
 
 var i = 0;
 function move(current) {
-    var elem = document.getElementById("myBar");
+	var elem = document.getElementById("myBar");
+	if ( current < 0 ){
+		elem.style.width = 100;
+		elem.style.backgroundColor = "red";
+		elem.innerHTML = 'Processing took too much time!';
+		return
+	}
     var previous = current - 10;
     var id = setInterval(frame, 10);
     function frame() {
@@ -123,19 +130,9 @@ function handleFileSelect(evt) {
 			// ======================== Mining ========================
 			var worker = new Worker('apriori.js');
 			worker.postMessage(learning_dataset);
-			/*
-				var bar = new ProgressBar.Line('#progress', {
-						  strokeWidth: 4,
-						  easing: 'easeInOut',
-						  duration: 1400,
-						  color: '#FFEA82',
-						  trailColor: '#eee',
-						  trailWidth: 1,
-						  svgStyle: {width: '100%', height: '100%'}
-						});
-			*/
-			var fire_time = new Date().getMilliseconds();
-			var current_time = new Date().getMilliseconds();
+
+			var fire_time = new Date().getTime();
+			var current_time = new Date().getTime();
 			worker.onmessage = function (event) {
 					// ======================== tracking progress ========================
 					if (!event.data.end)
@@ -143,14 +140,11 @@ function handleFileSelect(evt) {
 						max_count = event.data.max_count;
 						// bar.animate((event.data.message / max_count));
 						move(Math.ceil((event.data.message / max_count)*100))
-						current_time = new Date().getMilliseconds();
-						console.log('(current_time - fire_time)')
-						console.log((current_time - fire_time))
-						console.log(current_time)
-						console.log(fire_time)
-						if((current_time - fire_time)>100){
+						current_time = new Date().getTime();
+						if((current_time - fire_time)>1000){
 							worker.terminate();
-							console.log('bim bim')
+							move(-1)
+							console.log('Processing took too much time')
 						}
 						return
 					}
@@ -191,7 +185,7 @@ function handleFileSelect(evt) {
 					document.getElementById("results").style = "overflow:auto; height:400px;"
 					printPapaObject(results);
 
-					// Adjacency matrix
+					// ======================== Input formatting for visualization =============
 					result0 = _.clone(result)
 					nodes = Array.from(new Set(_.flatten(_.pluck(result0, 'lhs')).concat(_.flatten(_.pluck(result0, 'rhs')))))
 					nodes_indexes = _.invert(nodes)
@@ -226,13 +220,13 @@ function handleFileSelect(evt) {
 									which_group = Object.assign({}, which_group, o);
 								})
 					nodes = _.map(nodes, function (node) {
-						group = which_group[node] || which_group[node.replace("'", "").replace("'", "")]
+						var group = which_group[node] || which_group[node.replace("'", "").replace("'", "")]
 						return {
 							name: node,
 							group: which_column.indexOf(group)
 						}
-					}); // Math.floor((Math.random())*10 +1) // group = [1:10]
-					// console.log(links)
+					});
+					
 					input = {
 						nodes: nodes,
 						links: links
@@ -243,7 +237,7 @@ function handleFileSelect(evt) {
 					}			
 					
 					visualizer.visualize(input, graph);
-					move(100)
+					move(100);
 			};			
 		}
 	});
